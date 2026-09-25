@@ -1,5 +1,6 @@
-# 只跟踪 zhiguang_be-main / zhiguang_fe-main，其余全部忽略
+# 只跟踪 README.md 与 zhiguang_be-main / zhiguang_fe-main 两个项目目录，其余全部忽略
 /*
 !/.gitignore
+!/README.md
 !/zhiguang_be-main/
 !/zhiguang_fe-main/
