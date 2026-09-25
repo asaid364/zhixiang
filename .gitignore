@@ -1,0 +1,5 @@
+# 只跟踪 zhiguang_be-main / zhiguang_fe-main，其余全部忽略
+/*
+!/.gitignore
+!/zhiguang_be-main/
+!/zhiguang_fe-main/

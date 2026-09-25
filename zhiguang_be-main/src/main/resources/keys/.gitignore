@@ -1,0 +1,4 @@
+# JWT 签名私钥本地生成，勿提交；公钥需提交用于验签
+# openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private.pem
+# openssl rsa -in private.pem -pubout -out public.pem
+private.pem
