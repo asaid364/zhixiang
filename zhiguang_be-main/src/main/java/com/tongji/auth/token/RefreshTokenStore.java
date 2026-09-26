@@ -11,6 +11,17 @@ import java.time.Duration;
 public interface RefreshTokenStore {
 
     /**
+     * 原子轮换刷新令牌：校验旧令牌、保存新令牌并撤销旧令牌。
+     *
+     * @param userId       用户 ID。
+     * @param oldTokenId   当前刷新令牌 ID（jti）。
+     * @param newTokenId   新刷新令牌 ID（jti）。
+     * @param newTokenTtl  新刷新令牌生存时间。
+     * @return 旧令牌仍有效且轮换成功时返回 true；否则返回 false。
+     */
+    boolean rotateToken(long userId, String oldTokenId, String newTokenId, Duration newTokenTtl);
+
+    /**
      * 存储刷新令牌白名单记录。
      *
      * @param userId  用户 ID。

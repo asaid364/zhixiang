@@ -185,16 +185,19 @@ public class AuthService {
         }
 
         long userId = jwtService.extractUserId(jwt);
-        String tokenId = jwtService.extractTokenId(jwt);
-
-        if (!refreshTokenStore.isTokenValid(userId, tokenId)) {
-            throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID);
-        }
-
+        String oldTokenId = jwtService.extractTokenId(jwt);
         User user = findUserById(userId).orElseThrow(() -> new BusinessException(ErrorCode.IDENTIFIER_NOT_FOUND));
         TokenPair tokenPair = jwtService.issueTokenPair(user);
-        refreshTokenStore.revokeToken(userId, tokenId);
-        storeRefreshToken(userId, tokenPair);
+
+        boolean rotated = refreshTokenStore.rotateToken(
+                userId,
+                oldTokenId,
+                tokenPair.refreshTokenId(),
+                refreshTokenTtl(tokenPair)
+        );
+        if (!rotated) {
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_INVALID);
+        }
 
         return mapToken(tokenPair);
     }
@@ -358,17 +361,18 @@ public class AuthService {
     }
 
     /**
+     * 计算刷新令牌剩余生存时间，供首次保存与原子轮换共用。
+     */
+    private Duration refreshTokenTtl(TokenPair tokenPair) {
+        Duration ttl = Duration.between(Instant.now(), tokenPair.refreshTokenExpiresAt());
+        return ttl.isNegative() ? Duration.ZERO : ttl;
+    }
+
+    /**
      * 存储刷新令牌白名单记录。
-     *
-     * @param userId    用户 ID。
-     * @param tokenPair 令牌对（含刷新令牌 ID 与过期时间）。
      */
     private void storeRefreshToken(Long userId, TokenPair tokenPair) {
-        Duration ttl = Duration.between(Instant.now(), tokenPair.refreshTokenExpiresAt());
-        if (ttl.isNegative()) {
-            ttl = Duration.ZERO;
-        }
-        refreshTokenStore.storeToken(userId, tokenPair.refreshTokenId(), ttl);
+        refreshTokenStore.storeToken(userId, tokenPair.refreshTokenId(), refreshTokenTtl(tokenPair));
     }
 
     /**
